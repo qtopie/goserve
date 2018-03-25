@@ -8,8 +8,8 @@ script:
   - go test -v -covermode=count -coverprofile=coverage.out ./...
 deploy:
   provider: releases
-  api_key: 4100f6106bd6704d5016eb039ac10a9c85f2e2cf
-    secure:
+  api_key: 
+    secure: 4100f6106bd6704d5016eb039ac10a9c85f2e2cf
   file:
     - goserve
   skip_cleanup: true
