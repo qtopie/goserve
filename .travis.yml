@@ -4,16 +4,15 @@ go:
   - master
 env:
   - "PATH=/home/travis/gopath/bin:$PATH"
-before_install:
-  - go get github.com/mitchellh/gox
-  - gox -build-toolchain
-  - go get github.com/tcnksm/ghr
-  - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
-  - go get code.google.com/p/go.tools/cmd/cover
 script:
   - go test -v -covermode=count -coverprofile=coverage.out ./...
-  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
-after_success:
-  - gox -output "dist/{{.OS}}_{{.Arch}}_{{.Dir}}"
-  - ghr --username tcnksm-sample --token $GITHUB_TOKEN --replace --prerelease --debug pre-release dist/
+deploy:
+  provider: releases
+  api_key: 4100f6106bd6704d5016eb039ac10a9c85f2e2cf
+    secure:
+  file:
+    - goserve
+  skip_cleanup: true
+  on:
+    repo: artificerpi/goserve
+    tags: true
