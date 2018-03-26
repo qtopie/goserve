@@ -22,4 +22,3 @@ deploy:
   on:
     repo: artificerpi/goserve
     tags: true
-    condition: $LATEST = true
