@@ -8,16 +8,16 @@ env:
 before_install:
   - go get github.com/mitchellh/gox
 script:
-  - gox -os="linux darwin windows" -arch="amd64" -output="logshare.." -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...
+  - gox -os="linux darwin windows" -arch="amd64" -verbose ./...
 deploy:
   provider: releases
   api_key:
     secure: "l49QBKVUUyiXGyFWrYlPDSmwmlADzwIRDwNv/HncmdklNmXkSzyXrdvKpIzQdqZU84MtD5HJQJidTdY11Chvvs5X2hqWPSP4CJrzj6FLEljPd4qlSDnGgpFtGtlCWpVbPAR8OLDRW3yDu+dKxALKhVevvf2WHwzsXZregk/K/xieKlxjdm/ykwXJ2WpATSTfsoAHzShH7W4fWD89fkzLGTneA6ZHHPRfi0m9eGIDn0ZtELzeFRfN47t1ZRQ5wjzXjklDk4DpFMlmQrbO4p/EBT2vdmt1ICk3mVwHLGwdEym/U/95EIoraZV1T8XnD8puhgqbHNeylFZerwNIcczUMaMFaBHtuNrK+Z2SUp8EXEDac35xWp9Topq3Z7GG/Dlsv2ym8RwyzzvDVSbowh7am0D6XvVUM84Dkq4cJLFJc61fBB4BhUjQZp0snvhbODDWHLPmt7n36rx6AgYHix0RnJ/Af7nPoW7FmVfE8vkADIXqHjOp3sm1t/HouzqK+CN1Hq/0DsR0q74Ks6yXVlnY34bTDO9t5PBlC+hILWqRjGsqizno0/YfjPqPLU1x6r93BarbrZfuy4mPcDnQF9MIJb7DsRBQ4a+0J42ybZoFZYVjRoeb2zBDyBIYM68SuJ7g+9OutnyHuxE0ZVfotXGsAVuCTUo0YXo4vurUoBpdb28="
   file:
     file:
-    - goserve.windows.amd64.exe
-    - goserve.darwin.amd64
-    - goserve.linux.amd64
+    - goserve_windows_amd64.exe
+    - goserve_darwin_amd64
+    - goserve_linux_amd64
   skip_cleanup: true
   on:
     repo: artificerpi/goserve
