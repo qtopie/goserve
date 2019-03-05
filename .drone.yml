@@ -1,0 +1,32 @@
+---
+kind: pipeline
+name: linux-amd64
+
+platform: 
+  os: linux
+  arch: amd64
+
+steps:
+- name: test
+  image: golang
+  pull: always
+  commands:
+  - go test -v ./...
+  volumes:
+  - name: gopath
+    path: /go
+  
+- name: build
+  image: golang
+  pull: always
+  commands:
+  - go get github.com/mitchellh/gox
+  - go get -t -v ./...
+  - gox -os="linux darwin windows" -arch="amd64" -verbose ./...
+  volumes:
+  - name: gopath
+    path: /go
+  when:
+    event:
+    - push
+    - tag
