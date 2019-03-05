@@ -12,21 +12,17 @@ steps:
   pull: always
   commands:
   - go test -v ./...
-  volumes:
-  - name: gopath
-    path: /go
   
 - name: build
   image: golang
   pull: always
   commands:
   - go get github.com/mitchellh/gox
-  - go get -v ./...
+  - go get -t -v ./...
   - gox -os="linux darwin windows" -arch="amd64" -verbose ./...
-  volumes:
-  - name: gopath
-    path: /go
   when:
     event:
     - push
     - tag
+
+...
