@@ -25,7 +25,8 @@ steps:
   - go get -t -v ./...
   - gox -output="/tmp/build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="linux darwin windows" -arch="amd64" -verbose ./...
   volumes:
-     - ./dist:/tmp/build
+    - name: output-dir
+      path: /tmp/build
   when:
     event:
     - push
@@ -41,4 +42,8 @@ steps:
   when:
     event: tag
 
+volumes:
+  - name: output-dir
+    host:
+      path: ./dist
 ...
