@@ -23,10 +23,22 @@ steps:
   commands:
   - go get github.com/mitchellh/gox
   - go get -t -v ./...
-  - gox -os="linux darwin windows" -arch="amd64" -verbose ./...
+  - gox -output="/tmp/build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="linux darwin windows" -arch="amd64" -verbose ./...
+  volumes:
+     - ./dist:/tmp/build
   when:
     event:
     - push
     - tag
+
+- name: publish
+  image: plugins/github-release
+  settings:
+    api_key: [ github_token ]
+    files: dist/*
+    checksum:
+      - sha256
+  when:
+    event: tag
 
 ...
