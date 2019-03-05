@@ -23,10 +23,7 @@ steps:
   commands:
   - go get github.com/mitchellh/gox
   - go get -t -v ./...
-  - gox -output="/tmp/build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="linux darwin windows" -arch="amd64" -verbose ./...
-  volumes:
-    - name: output-dir
-      path: /tmp/build
+  - gox -output="./dist/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="linux darwin windows" -arch="amd64" -verbose ./...
   when:
     event:
     - push
@@ -42,8 +39,4 @@ steps:
   when:
     event: tag
 
-volumes:
-  - name: output-dir
-    host:
-      path: ./dist
 ...
