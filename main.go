@@ -1,14 +1,17 @@
 package main
 
 import (
-	"strconv"
-	"net/http"
 	"flag"
 	"log"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gohugoio/hugo/livereload"
 )
 
 var (
-	port int
+	port       int
 	enableCORS bool
 )
 
@@ -27,17 +30,36 @@ func buildHandler() http.Handler {
 	if enableCORS {
 		handler = configureCORS()
 	}
-	
+
 	return handler
 }
 
 func main() {
 	flag.IntVar(&port, "p", 7070, "specify the port to listen on")
-	flag.BoolVar(&enableCORS,"cors", false, "enable CORS support")
+	flag.BoolVar(&enableCORS, "cors", false, "enable CORS support")
 	flag.Parse()
 
 	fsHandler := http.FileServer(http.Dir("."))
 	http.Handle("/", fsHandler)
+
+	// livereload
+	livereload.Initialize()
+	http.HandleFunc("/livereload.js", livereload.ServeJS)
+	http.HandleFunc("/livereload", livereload.Handler)
+
+	done := make(chan bool)
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		// watching
+		for {
+			select {
+			case <-ticker.C:
+				livereload.ForceRefresh()
+			case <-done:
+				return
+			}
+		}
+	}()
 
 	addr := ":" + strconv.Itoa(port)
 	log.Println("Serving port", addr)
