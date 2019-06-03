@@ -4,6 +4,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -11,59 +14,82 @@ import (
 )
 
 var (
+	dir        string
 	port       int
-	enableCORS bool
+	cors       string
+	watch      bool
+	exclusions string
 )
 
-// configure CORS support (wild)
-func configureCORS() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Range")
-		http.DefaultServeMux.ServeHTTP(w, r)
-	})
-
-}
-
-func buildHandler() http.Handler {
-	var handler http.Handler
-	if enableCORS {
-		handler = configureCORS()
-	}
-
-	return handler
-}
-
 func main() {
-	flag.IntVar(&port, "p", 7070, "specify the port to listen on")
-	flag.BoolVar(&enableCORS, "cors", false, "enable CORS support")
+	flag.IntVar(&port, "port", 7070, "specify the port to listen on")
+	flag.StringVar(&cors, "cors", "", "enable CORS support")
+	flag.StringVar(&dir, "dir", "./", "dir")
+	flag.BoolVar(&watch, "watch", true, "watch file changes")
+	flag.StringVar(&exclusions, "excludes", "", "file or folders to exclude")
 	flag.Parse()
 
-	fsHandler := http.FileServer(http.Dir("."))
-	http.Handle("/", fsHandler)
+	// Register handlers
+	fsHandler := http.FileServer(http.Dir(dir))
+	http.HandleFunc("/", buildRootHandler(fsHandler.ServeHTTP))
 
 	// livereload
-	livereload.Initialize()
-	http.HandleFunc("/livereload.js", livereload.ServeJS)
-	http.HandleFunc("/livereload", livereload.Handler)
+	if watch {
+		http.HandleFunc("/livereload.js", livereload.ServeJS)
+		http.HandleFunc("/livereload", livereload.Handler)
 
-	done := make(chan bool)
-	ticker := time.NewTicker(10 * time.Second)
-	go func() {
-		// watching
-		for {
-			select {
-			case <-ticker.C:
-				livereload.ForceRefresh()
-			case <-done:
+		livereload.Initialize()
+		done := make(chan bool)
+		ticker := time.NewTicker(10 * time.Second)
+		go func() {
+			// watching
+			for {
+				select {
+				case <-ticker.C:
+					livereload.ForceRefresh()
+				case <-done:
+					return
+				}
+			}
+		}()
+	}
+
+	// Start listening
+	addr := ":" + strconv.Itoa(port)
+	log.Println("Serving at 0.0.0.0", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+// buildRootHandler wraps the core handler with additional features
+func buildRootHandler(coreHandler http.HandlerFunc) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if cors != "" {
+			w.Header().Add("Access-Control-Allow-Origin", cors)
+			w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Range")
+		}
+
+		if watch {
+			upath := path.Clean(r.URL.Path)
+			filename := filepath.Join(dir, upath[1:])
+			filePtr := &filename
+
+			if ok, _ := checkHtmlPage(filePtr); ok {
+				file, err := os.Open(*filePtr)
+				if err != nil {
+					log.Println(err)
+				}
+				defer file.Close()
+
+				delay := 10
+				err = injectHtml(file, w, port, delay)
+				if err != nil {
+					w.Write([]byte(err.Error()))
+				}
 				return
 			}
 		}
-	}()
 
-	addr := ":" + strconv.Itoa(port)
-	log.Println("Serving port", addr)
-
-	handler := buildHandler()
-	log.Fatal(http.ListenAndServe(addr, handler))
+		coreHandler.ServeHTTP(w, r)
+	}
 }
