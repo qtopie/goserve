@@ -15,13 +15,13 @@ steps:
   image: golang
   pull: always
   commands:
+  - go get -t -v ./...
   - go test -v ./...
   
 - name: build
   image: golang
   pull: always
   commands:
-  - go get github.com/mitchellh/gox
   - go get -t -v ./...
   - gox -output="./dist/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="linux darwin windows" -arch="amd64" -verbose ./...
   when:
