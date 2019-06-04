@@ -22,7 +22,7 @@ steps:
   image: golang
   pull: always
   commands:
-  - go get -t -v ./...
+  - go get github.com/mitchellh/gox
   - gox -output="./dist/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="linux darwin windows" -arch="amd64" -verbose ./...
   when:
     event:
