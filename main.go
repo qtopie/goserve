@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -17,17 +19,29 @@ var (
 	dir        string
 	port       int
 	cors       string
+	basic      string
 	watch      bool
+	auth       bool
 	exclusions string
 )
 
 func main() {
 	flag.IntVar(&port, "port", 7070, "specify the port to listen on")
-	flag.StringVar(&cors, "cors", "", "enable CORS support")
-	flag.StringVar(&dir, "dir", "./", "dir")
+	flag.StringVar(&cors, "cors", "", "enable CORS support with specified origin")
+	flag.StringVar(&basic, "basic", "", "use basic auth, format username:password, ignored if invalid")
+	flag.StringVar(&dir, "dir", "./", "root dir to serve")
 	flag.BoolVar(&watch, "watch", true, "watch file changes")
 	flag.StringVar(&exclusions, "excludes", "", "file or folders to exclude")
 	flag.Parse()
+
+	if basic != "" {
+		basicAuthRegex, _ := regexp.Compile("([a-z]+):([a-z]+)")
+		if basicAuthRegex.MatchString(basic) {
+			auth = true
+		} else {
+			log.Println("Ignored invalid basic auth value", basic)
+		}
+	}
 
 	// Register handlers
 	fsHandler := http.FileServer(http.Dir(dir))
@@ -64,6 +78,17 @@ func main() {
 func buildRootHandler(coreHandler http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		if auth {
+			username, password, ok := r.BasicAuth()
+			basicAuth := fmt.Sprintf("%s:%s", username, password)
+
+			if !ok || basicAuth != basic {
+				w.Header().Set("WWW-Authenticate", `Basic realm="realm"`)
+				http.Error(w, "Unauthorized request.", http.StatusUnauthorized)
+				return
+			}
+		}
+
 		if cors != "" {
 			w.Header().Add("Access-Control-Allow-Origin", cors)
 			w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Range")
