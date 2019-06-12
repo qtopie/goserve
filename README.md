@@ -6,6 +6,6 @@ Simple HTTP Server implemented in golang
 ## Features
 - [x] CORS
 - [x] Basic Authentication
-- [ ] Livereload
+- [x] Livereload
 - [ ] Resumable file upload
 - [ ] File/folders exclusions

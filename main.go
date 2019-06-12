@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/gohugoio/hugo/livereload"
 )
@@ -53,19 +52,7 @@ func main() {
 		http.HandleFunc("/livereload", livereload.Handler)
 
 		livereload.Initialize()
-		done := make(chan bool)
-		ticker := time.NewTicker(10 * time.Second)
-		go func() {
-			// watching
-			for {
-				select {
-				case <-ticker.C:
-					livereload.ForceRefresh()
-				case <-done:
-					return
-				}
-			}
-		}()
+		go watchChanges(dir)
 	}
 
 	// Start listening
@@ -95,6 +82,7 @@ func buildRootHandler(coreHandler http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if watch {
+
 			upath := path.Clean(r.URL.Path)
 			filename := filepath.Join(dir, upath[1:])
 			filePtr := &filename
