@@ -29,7 +29,7 @@ func main() {
 	flag.StringVar(&cors, "cors", "", "enable CORS support with specified origin")
 	flag.StringVar(&basic, "basic", "", "use basic auth, format username:password, ignored if invalid")
 	flag.StringVar(&dir, "dir", "./", "root dir to serve")
-	flag.BoolVar(&watch, "watch", true, "watch file changes")
+	flag.BoolVar(&watch, "watch", false, "watch file changes")
 	flag.StringVar(&exclusions, "excludes", "", "file or folders to exclude")
 	flag.Parse()
 
